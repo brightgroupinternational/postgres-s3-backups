@@ -29,7 +29,7 @@ create_bucket() {
         --public-access-block-configuration \
         "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
 
-    # enable versioning for objects in the bucket 
+    # enable versioning for objects in the bucket
     s3api put-bucket-versioning --versioning-configuration Status=Enabled
 
     # encrypt objects in the bucket
@@ -41,7 +41,7 @@ create_bucket() {
 ensure_bucket_exists() {
     if bucket_exists; then
         return
-    fi    
+    fi
     create_bucket
 }
 
@@ -59,11 +59,22 @@ upload_to_bucket() {
     s3 cp - "s3://$S3_BUCKET_NAME/render-pg-backup-$BACKUP_FILE_PREFIX-$(date '+%Y-%m-%d_%H.%M').gpg"
 }
 
+remove_old_backups() {
+    s3 ls "s3://${S3_BUCKET_NAME}/" --recursive | awk 'NF>1{print $4}' | grep "^render-pg-backup-${BACKUP_FILE_PREFIX}" | sort | head -n -90 | while read -r line ; do
+        echo "Removing \"${line}\"";
+        s3 rm "s3://${S3_BUCKET_NAME}/${line}";
+    done
+}
+
 main() {
     ensure_bucket_exists
     echo "Taking backup and uploading it to S3..."
+
     pg_dump_database | gzip | encrypt_backup | upload_to_bucket
-    echo "Done."
+    echo "Backup Complete. Removing old backups..."
+
+    remove_old_backups
+    echo "Done"
 }
 
 main
