@@ -50,7 +50,7 @@ pg_dump_database() {
 }
 
 encrypt_backup() {
-    gpg --yes --batch --passphrase="$GPG_PASSPHRASE"
+    gpg --yes --batch --passphrase="$GPG_PASSPHRASE" --symmetric --cipher-algo AES256 -o -
 }
 
 upload_to_bucket() {
