@@ -49,16 +49,20 @@ pg_dump_database() {
     pg_dump  --no-owner --no-privileges --clean --if-exists --quote-all-identifiers "$DATABASE_URL"
 }
 
+encrypt_backup() {
+    gpg --yes --batch --passphrase="$GPG_PASSPHRASE"
+}
+
 upload_to_bucket() {
     # if the zipped backup file is larger than 50 GB add the --expected-size option
     # see https://docs.aws.amazon.com/cli/latest/reference/s3/cp.html
-    s3 cp - "s3://$S3_BUCKET_NAME/$(date +%Y/%m/%d/backup-%H-%M-%S.sql.gz)"
+    s3 cp - "s3://$S3_BUCKET_NAME/render-pg-backup-$BACKUP_FILE_PREFIX-$(date '+%Y-%m-%d_%H.%M').gpg"
 }
 
 main() {
     ensure_bucket_exists
     echo "Taking backup and uploading it to S3..."
-    pg_dump_database | gzip | upload_to_bucket
+    pg_dump_database | gzip | encrypt_backup | upload_to_bucket
     echo "Done."
 }
 
