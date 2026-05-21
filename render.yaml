@@ -34,4 +34,6 @@ services:
       # Specify a prefix, normally the app name
       - key: BACKUP_FILE_PREFIX
         sync: false
+      - key: GPG_PASSPHRASE
+        sync: false
 
