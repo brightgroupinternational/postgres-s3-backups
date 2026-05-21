@@ -31,4 +31,7 @@ services:
       # For example, 3.20
       - key: ALPINE_VERSION
         sync: false
+      # Specify a prefix, normally the app name
+      - key: BACKUP_FILE_PREFIX
+        sync: false
 
